@@ -35,7 +35,7 @@ pip install -r requirements.txt
 1. To run the script, use the following command:
 
 ```bash
-python lecture2go_downloader.py --url <video_url> [--password <password>] [--all] [--resolution <min|max>]
+python lecture2go_downloader.py --url <video_url> [--password <password>] [--all] [--resolution <min|max|manual>]
 ```
 
 Where:
@@ -43,7 +43,7 @@ Where:
 - `<video_url>`: URL of the Lecture2Go video or series you want to download.
 - `<password>`: Password for the video, if it's protected.
 - `--all`: Download all videos in a series (if applicable).
-- `--resolution`: Choose to always download either minimum (`min`) or maximum (`max`) resolution. Default is `max`. If you do not choose between either, you will get asked to select a resolution for each video.
+- `--resolution`: Choose to always download either minimum (`min`) or maximum (`max`) resolution. Default is `max`. You can also choose to select a resolution manually (`manual`) for each video, respectively.
 
 For example, to download a single video, which is not password protected, at maximum resolution:
 

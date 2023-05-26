@@ -1,12 +1,12 @@
-import os
-import re
-import requests
-import urllib3
-import time
 import argparse
 import logging
+import os
+import re
+import time
 
 import m3u8
+import requests
+import urllib3
 from bs4 import BeautifulSoup
 from tqdm import tqdm
 
@@ -110,21 +110,24 @@ def parse_website_for_metadata(video_url, password=None):
 
 def choose_resolution(playlist, resolution):
     resolutions = {chunklist.stream_info.resolution[0]: idx for idx, chunklist in enumerate(playlist.playlists)}
-    if resolution == "max":
-        logging.info(f"Selecting highest resolution.")
-        return resolutions[max(resolutions.keys())]
-    elif resolution == "min":
-        logging.info(f"Selecting lowest resolution.")
-        return resolutions[min(resolutions.keys())]
-    else:
-        print("---------------------------")
-        for i, res in enumerate(resolutions.keys()):
-            print(f"{i}) : {res}")
-        while True:
-            res_input = input("Select resolution: ")
-            if res_input.isdigit() and int(res_input) in resolutions.values():
-                return int(res_input)
-            logging.warning(f"Invalid resolution, try again.")
+    resolutions_selector = {
+        "max": max(resolutions.keys()),
+        "min": min(resolutions.keys()),
+    }
+    
+    resolution_choice = resolutions_selector.get(resolution)
+    if resolution_choice is not None:
+        logging.info(f"Selecting {resolution} resolution: {resolution_choice}")
+        return resolutions[resolution_choice]
+    
+    print("---------------------------")
+    for i, res in enumerate(resolutions.keys()):
+        print(f"{i}) : {res}")
+    while True:
+        res_input = input("Select resolution: ")
+        if res_input.isdigit() and int(res_input) in resolutions.values():
+            return int(res_input)
+        logging.warning(f"Invalid resolution, try again.")
 
 
 def download_single_video(video_url, video_metadata, password=None, resolution=None):
@@ -168,7 +171,7 @@ def main():
     parser.add_argument("-u", "--url", help="Lecture2Go URL")
     parser.add_argument("-p", "--password", help="Password for protected videos")
     parser.add_argument("-a", "--all", help="Download all videos in series", action="store_true")
-    parser.add_argument("-r", "--resolution", help="Always download MIN/MAX resolution", choices=["min", "max"], default="max")
+    parser.add_argument("-r", "--resolution", help="Always download MIN/MAX resolution. Or manual for each video.", choices=["min", "max", "manual"], default="max")
     args = parser.parse_args()
 
     display_banner()
