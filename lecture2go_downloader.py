@@ -4,6 +4,7 @@ import requests
 import urllib3
 import time
 import argparse
+import logging
 
 import m3u8
 from bs4 import BeautifulSoup
@@ -11,10 +12,9 @@ from tqdm import tqdm
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-import pprint
-pp = pprint.PrettyPrinter(indent=4)
-
 SESSION = requests.Session()
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
 def display_banner():
@@ -34,17 +34,18 @@ def display_banner():
 
 def fetch_content(url, parse_html=True, verify=True, headers=None, cookies=None, password=None):
     if parse_html:
-        print(f"[INFO] Starting to fetch content from {url}")
+        logging.info(f"Starting to fetch content from {url}")
 
     protected = testing_if_site_protected(url)
     if protected:
-        print("[INFO] Site is protected")
+        logging.info(f"Site is protected")
     
     if protected and not password:
-        raise ValueError("[ERROR] Password required for protected videos.")
+        logging.error(f"Password required for protected videos.")
+        exit(1)
     
     if protected and password:
-        print("[INFO] Password provided, trying to access protected area...")
+        logging.info(f"Password provided, trying to access protected area...")
       
         params = {
             "_OpenAccessVideos_formDate": int(time.time()),
@@ -58,9 +59,10 @@ def fetch_content(url, parse_html=True, verify=True, headers=None, cookies=None,
         SESSION.cookies.update(cookies)
 
         if ".m3u8" in response.text:
-            print("[INFO] Password correct, continuing.")
+            logging.info(f"Password correct, continuing.")
         else:
-            raise ValueError("[ERROR] Password incorrect, exiting.")
+            logging.error(f"Password incorrect, exiting.")
+            exit(1)
 
     else:
         headers = {
@@ -109,10 +111,10 @@ def parse_website_for_metadata(video_url, password=None):
 def choose_resolution(playlist, resolution):
     resolutions = {chunklist.stream_info.resolution[0]: idx for idx, chunklist in enumerate(playlist.playlists)}
     if resolution == "max":
-        print("[INFO] Selecting highest resolution.")
+        logging.info(f"Selecting highest resolution.")
         return resolutions[max(resolutions.keys())]
     elif resolution == "min":
-        print("[INFO] Selecting lowest resolution.")
+        logging.info(f"Selecting lowest resolution.")
         return resolutions[min(resolutions.keys())]
     else:
         print("---------------------------")
@@ -122,7 +124,7 @@ def choose_resolution(playlist, resolution):
             res_input = input("Select resolution: ")
             if res_input.isdigit() and int(res_input) in resolutions.values():
                 return int(res_input)
-            print("[WARNING] Invalid resolution, try again.")
+            logging.warning(f"Invalid resolution, try again.")
 
 
 def download_single_video(video_url, video_metadata, password=None, resolution=None):
@@ -137,7 +139,7 @@ def download_single_video(video_url, video_metadata, password=None, resolution=N
     os.makedirs("videos", exist_ok=True)
     video_filename = f'{video_metadata["date"]}_{video_metadata["creator"]}_{video_metadata["title"]}_{time.strftime("%Y%m%d-%H%M%S")}'
 
-    print(f"[INFO] Downloading {video_filename}...")
+    logging.info(f"Downloading {video_filename}...")
     with open(f"videos/{video_filename}.ts", 'wb') as f:
         for segment in tqdm(m3u8_chunklist.segments):
             segment_content = fetch_content(segment.absolute_uri, parse_html=False, verify=False, cookies=response.cookies).content
@@ -147,9 +149,9 @@ def download_videos(url, password=None, download_all=False, resolution="max"):
     video_urls = []
     
     if download_all:
-        print("[INFO] Parsing website for all videos in series...")
+        logging.info(f"Parsing website for all videos in series...")
         all_videos = get_all_videos_in_series(url, password=password)
-        print(f"[INFO] Found {len(all_videos)} videos in series.")
+        logging.info(f"Found {len(all_videos)} videos in series.")
         for video in all_videos:
             video_urls.append(video["url"])
     else:
