@@ -43,7 +43,7 @@ Where:
 - `<video_url>`: URL of the Lecture2Go video or series you want to download.
 - `<password>`: Password for the video, if it's protected.
 - `--all`: Download all videos in a series (if applicable).
-- `--resolution`: Choose to always download either minimum (`min`) or maximum (`max`) resolution. Default is `max`.
+- `--resolution`: Choose to always download either minimum (`min`) or maximum (`max`) resolution. Default is `max`. If you do not choose between either, you will get asked to select a resolution for each video.
 
 For example, to download a single video, which is not password protected, at maximum resolution:
 

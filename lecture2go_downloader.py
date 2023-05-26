@@ -98,8 +98,8 @@ def parse_website_for_metadata(video_url, password=None):
     video_date = soup.find('div', attrs={'id': 'video-info'}).find('div', attrs={'class': 'video-label'}).text.strip()
     video_date = '-'.join(reversed(video_date.split('.')))
 
-
     data = {
+        "topic": soup.find('div', attrs={'class': 'path'}).find('span', attrs={'class': 'breadcrumb-item'}).text.strip(),
         "title": soup.find('h2', attrs={'class': 'video-title'}).text.strip(),
         "creator": soup.find('div', attrs={'class': 'allcreators'}).find('a').text.strip(),
         "date": video_date
@@ -137,10 +137,11 @@ def download_single_video(video_url, video_metadata, password=None, resolution=N
     m3u8_chunklist = m3u8.load(selected_resolution_chunklist.absolute_uri, verify_ssl=False)
 
     os.makedirs("videos", exist_ok=True)
+    os.makedirs(f"videos/{video_metadata['topic']}", exist_ok=True)
     video_filename = f'{video_metadata["date"]}_{video_metadata["creator"]}_{video_metadata["title"]}_{time.strftime("%Y%m%d-%H%M%S")}'
 
     logging.info(f"Downloading {video_filename}...")
-    with open(f"videos/{video_filename}.ts", 'wb') as f:
+    with open(f"videos/{video_metadata['topic']}/{video_filename}.ts", 'wb') as f:
         for segment in tqdm(m3u8_chunklist.segments):
             segment_content = fetch_content(segment.absolute_uri, parse_html=False, verify=False, cookies=response.cookies).content
             f.write(segment_content)
